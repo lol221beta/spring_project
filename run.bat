@@ -76,15 +76,42 @@ echo.
 echo Starting Spring Boot application...
 echo.
 
-if exist "maven\apache-maven-3.9.5\bin\mvn.cmd" (
-    call maven\apache-maven-3.9.5\bin\mvn.cmd spring-boot:run
-) else (
-    mvn spring-boot:run
+REM Используем Maven Wrapper (не требует установки Maven)
+if exist "mvnw.cmd" (
+    echo Using Maven Wrapper (mvnw.cmd)...
+    call mvnw.cmd spring-boot:run
+    goto end
 )
 
+REM Если Wrapper нет, пробуем локальный Maven
+if exist "maven\apache-maven-3.9.5\bin\mvn.cmd" (
+    echo Using local Maven installation...
+    call maven\apache-maven-3.9.5\bin\mvn.cmd spring-boot:run
+    goto end
+)
+
+REM Если Maven в PATH
+where mvn >nul 2>&1
+if %errorlevel% equ 0 (
+    echo Using system Maven...
+    mvn spring-boot:run
+    goto end
+)
+
+echo.
+echo ERROR: Maven not found!
+echo.
+echo Solutions:
+echo 1. Use Maven Wrapper: mvnw.cmd spring-boot:run
+echo 2. Install Maven and add to PATH
+echo 3. Run: mvn wrapper:wrapper to create Maven Wrapper
+echo.
+pause
+exit /b 1
+
+:end
 if %errorlevel% neq 0 (
     echo.
     echo ERROR: Failed to start application.
-    echo Make sure Maven is installed and in PATH.
     pause
 )

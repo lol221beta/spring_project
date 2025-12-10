@@ -53,10 +53,10 @@ logs/
 *.bak
 *.cache
 
-# Maven wrapper
-.mvn/
-mvnw
-mvnw.cmd
+# Maven wrapper - НЕ игнорируем, должен быть в репозитории
+# .mvn/wrapper/maven-wrapper.jar - игнорируем только JAR
+.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
 
 # Локальный Maven (если скачан)
 maven/
