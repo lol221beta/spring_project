@@ -10,7 +10,7 @@ public class AboutController {
     @GetMapping("/about")
     public String about(Model model) {
         model.addAttribute("authorName", "Попов Александр Алексеевич");
-        model.addAttribute("group", "ИТМ22-4");
+        model.addAttribute("group", "ПИ23-2в");
         model.addAttribute("university", "Финансовый университет при Правительстве РФ");
         model.addAttribute("faculty", "Факультет информационных технологий и анализа больших данных");
         model.addAttribute("department", "Кафедра анализа данных и машинного обучения");
