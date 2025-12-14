@@ -136,17 +136,21 @@
                             <a th:href="@{/attractions}" class="btn btn-secondary">
                                 Отмена
                             </a>
-                            <form th:if="${attraction.id != null}" 
-                                  th:action="@{/attractions/delete/{id}(id=${attraction.id})}" 
-                                  method="post" 
-                                  class="inline-form"
-                                  onsubmit="return confirm('Вы уверены, что хотите удалить этот аттракцион?');"
-                                  style="display: inline;">
-                                <button type="submit" class="btn btn-delete-form">
-                                    Удалить
-                                </button>
-                            </form>
+                            <button th:if="${attraction.id != null}" 
+                                    type="button" 
+                                    class="btn btn-delete-form"
+                                    th:onclick="'deleteAttraction(' + ${attraction.id} + ')'">
+                                Удалить
+                            </button>
                         </div>
+                    </form>
+                    
+                    <!-- Форма удаления вынесена за пределы формы сохранения -->
+                    <form th:if="${attraction.id != null}" 
+                          id="deleteForm"
+                          th:action="@{/attractions/delete/{id}(id=${attraction.id})}" 
+                          method="post" 
+                          style="display: none;">
                     </form>
                 </div>
             </div>
@@ -157,6 +161,13 @@
         </footer>
     </div>
     <script>
+        function deleteAttraction(id) {
+            if (confirm('Вы уверены, что хотите удалить этот аттракцион?')) {
+                console.log('Удаление аттракциона ID:', id);
+                document.getElementById('deleteForm').submit();
+            }
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
             const header = document.querySelector('.main-header');
             

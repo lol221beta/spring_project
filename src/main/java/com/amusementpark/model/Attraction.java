@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalTime;
 
+import com.amusementpark.model.User;
+
 @Entity
 @Table(name = "attractions")
 public class Attraction {
@@ -11,6 +13,10 @@ public class Attraction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    private User owner;
     
     @NotBlank(message = "Название обязательно для заполнения")
     @Size(min = 2, max = 100, message = "Название должно содержать от 2 до 100 символов")
@@ -18,7 +24,7 @@ public class Attraction {
     private String name;
     
     @NotBlank(message = "Описание обязательно для заполнения")
-    @Size(min = 10, max = 500, message = "Описание должно содержать от 10 до 500 символов")
+    @Size(min = 3, max = 500, message = "Описание должно содержать от 3 до 500 символов")
     @Column(nullable = false, length = 500)
     private String description;
     
@@ -179,6 +185,14 @@ public class Attraction {
     
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public User getOwner() {
+        return owner;
+    }
+
+    public void setOwner(User owner) {
+        this.owner = owner;
     }
 }
 

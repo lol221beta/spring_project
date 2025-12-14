@@ -37,7 +37,8 @@
             <div class="content-wrapper">
                 <div class="page-header">
                     <h2 class="page-title">Справочник аттракционов</h2>
-                    <button class="btn btn-primary btn-add" onclick="showAddForm()">
+                    <button class="btn btn-primary btn-add" onclick="showAddForm()"
+                            sec:authorize="hasAnyRole('ADMIN','USER')">
                         Добавить аттракцион
                     </button>
                 </div>
@@ -51,7 +52,8 @@
                     <span th:text="${errorMessage}"></span>
                 </div>
 
-                <div id="attractionForm" class="form-container" style="display: none;">
+                <div id="attractionForm" class="form-container" style="display: none;"
+                     sec:authorize="hasAnyRole('ADMIN','USER')">
                     <div class="form-header">
                         <h3 id="formTitle">Добавить новый аттракцион</h3>
                         <button class="btn-close" onclick="hideAddForm()">×</button>
@@ -210,9 +212,12 @@
                                     <th>Вместимость</th>
                                     <th>Местоположение</th>
                                     <th>Статус</th>
+                                    <th>Действия</th>
                                 </tr>
                             </thead>
-                            <tbody>
+
+                            <!-- Таблица для администратора: строки кликабельны и ведут на редактирование -->
+                            <tbody sec:authorize="hasRole('ADMIN')">
                                 <tr th:each="attraction, iterStat : ${attractions}" 
                                     th:classappend="${attraction.status == 'На ремонте'} ? 'row-maintenance' : (${attraction.status == 'Закрыт'} ? 'row-closed' : '')"
                                     th:onclick="'window.location.href=\'/attractions/edit/' + ${attraction.id} + '\''"
@@ -243,6 +248,52 @@
                                               th:classappend="${attraction.status == 'Работает'} ? 'status-active' : (${attraction.status == 'На ремонте'} ? 'status-maintenance' : (${attraction.status == 'Закрыт'} ? 'status-closed' : ''))"
                                               th:text="${attraction.status}"></span>
                                     </td>
+                                    <td>
+                                        <a th:href="@{/attractions/edit/{id}(id=${attraction.id})}"
+                                           class="btn btn-table-action">
+                                            Редактировать
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+
+                            <!-- Таблица для обычного пользователя: только просмотр, без перехода на редактирование -->
+                            <tbody sec:authorize="!hasRole('ADMIN')">
+                                <tr th:each="attraction, iterStat : ${attractions}" 
+                                    th:classappend="${attraction.status == 'На ремонте'} ? 'row-maintenance' : (${attraction.status == 'Закрыт'} ? 'row-closed' : '')">
+                                    <td th:text="${iterStat.count}"></td>
+                                    <td class="name-cell">
+                                        <strong th:text="${attraction.name}"></strong>
+                                        <div class="description-preview" th:text="${attraction.description}"></div>
+                                    </td>
+                                    <td>
+                                        <span class="badge" 
+                                              th:classappend="${attraction.type == 'Экстремальный'} ? 'badge-danger' : (${attraction.type == 'Семейный'} ? 'badge-success' : (${attraction.type == 'Детский'} ? 'badge-info' : (${attraction.type == 'Водный'} ? 'badge-primary' : '')))"
+                                              th:text="${attraction.type}"></span>
+                                    </td>
+                                    <td th:text="${attraction.minAge} + '-' + ${attraction.maxAge} + ' лет'"></td>
+                                    <td th:text="${#numbers.formatDecimal(attraction.minHeight, 1, 2)}"></td>
+                                    <td>
+                                        <span class="time-range">
+                                            <span th:text="${#temporals.format(attraction.openingTime, 'HH:mm')}"></span>
+                                            <span class="time-separator">-</span>
+                                            <span th:text="${#temporals.format(attraction.closingTime, 'HH:mm')}"></span>
+                                        </span>
+                                    </td>
+                                    <td th:text="${attraction.capacity} + ' чел.'"></td>
+                                    <td class="location-cell" th:text="${attraction.location}"></td>
+                                    <td>
+                                        <span class="status-badge" 
+                                              th:classappend="${attraction.status == 'Работает'} ? 'status-active' : (${attraction.status == 'На ремонте'} ? 'status-maintenance' : (${attraction.status == 'Закрыт'} ? 'status-closed' : ''))"
+                                              th:text="${attraction.status}"></span>
+                                    </td>
+                                    <td>
+                                        <a th:if="${attraction.owner != null and attraction.owner.username == #authentication.name}"
+                                           th:href="@{/attractions/edit/{id}(id=${attraction.id})}"
+                                           class="btn btn-table-action">
+                                            Редактировать
+                                        </a>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -251,7 +302,8 @@
                         <div class="empty-icon"></div>
                         <h3>Аттракционы не найдены</h3>
                         <p>Начните с добавления первого аттракциона в систему</p>
-                        <button class="btn btn-primary" onclick="showAddForm()">
+                        <button class="btn btn-primary" onclick="showAddForm()"
+                                sec:authorize="hasAnyRole('ADMIN','USER')">
                             Добавить аттракцион
                         </button>
                     </div>
@@ -266,6 +318,15 @@
 
     <script>
         function showAddForm() {
+            const form = document.querySelector('.attraction-form');
+            if (form) {
+                form.reset();
+                const idField = form.querySelector('input[type="hidden"][name="id"]');
+                if (idField) {
+                    idField.value = '';
+                    console.log('ID поля сброшен на пустое значение');
+                }
+            }
             document.getElementById('attractionForm').style.display = 'block';
             document.getElementById('formTitle').textContent = 'Добавить новый аттракцион';
             document.getElementById('attractionForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -276,10 +337,26 @@
             const form = document.querySelector('.attraction-form');
             if (form) {
                 form.reset();
-                const idField = form.querySelector('input[type="hidden"]');
+                const idField = form.querySelector('input[type="hidden"][name="id"]');
                 if (idField) idField.value = '';
             }
         }
+        
+        // Добавляем обработчик отправки формы для отладки
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('.attraction-form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const idField = form.querySelector('input[type="hidden"][name="id"]');
+                    console.log('Форма отправляется. ID поля:', idField ? idField.value : 'не найдено');
+                    const formData = new FormData(form);
+                    console.log('Данные формы:');
+                    for (let [key, value] of formData.entries()) {
+                        console.log('  ' + key + ': ' + value);
+                    }
+                });
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', function() {
             const formErrors = document.querySelectorAll('.error-message');
